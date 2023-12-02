@@ -1,4 +1,6 @@
+import traceback
 import sys
+import subprocess
 import glob
 import shutil
 import os
@@ -7,6 +9,10 @@ try:
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    print( glob.glob('./carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64') ) )
 except IndexError:
     pass
 
@@ -15,7 +21,7 @@ from carla import Transform, Location, Rotation
 import argparse
 import logging
 from npc_spawning import spawnWalkers, spawnVehicles
-from configuration import attachSensorsToVehicle, SimulationParams, setupTrafficManager, setupWorld, createOutputDirectories, CarlaSyncMode
+from configuration import attachSensorsToVehicle, SimulationParams, setupTrafficManager, setupWorld, setupWorldWeather, createOutputDirectories, CarlaSyncMode
 import save_sensors
 import random
 import json
@@ -24,7 +30,9 @@ import queue
 import os
 from os import path
 from ego_vehicle import EgoVehicle
+from fixed_perception import FixedPerception
 from utils.arg_parser import CommandLineArgsParser
+from utils.weather import weather_presets
 
 
 def main():
@@ -55,12 +63,44 @@ def main():
     SimulationParams.debug = args.debug
 
     world = client.get_world()
+
     avail_maps = client.get_available_maps()
     # world = client.load_world(SimulationParams.town_map)
+
+    # Remove all parked vehicles etc.
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Car)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Bicycle)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Bus)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Motorcycle)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Pedestrians)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Train)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+    env_objs = world.get_environment_objects(carla.CityObjectLabel.Truck)
+    for i in range (0, len(env_objs)):
+        world.enable_environment_objects({env_objs[i].id}, False)
+
     blueprint_library = world.get_blueprint_library()
+
+    for name, value in weather_presets:
+        if name == args.weather:
+            SimulationParams.weather = value
+            break
 
     # Setup
     setupWorld(world)
+    if SimulationParams.weather is not None:
+        setupWorldWeather(world, SimulationParams.weather)
     setupTrafficManager(client)
 
     # Get all required blueprints
@@ -72,13 +112,26 @@ def main():
     lidar_segment_bp = blueprint_library.find('sensor.lidar.ray_cast_semantic')
 
     egos = []
+    fixed = []
     for i in range(SimulationParams.number_of_ego_vehicles):
         egos.append(EgoVehicle(
-            SimulationParams.sensor_json_filepath[i], None, world, args))
+            SimulationParams.sensor_json_filepath, None, world, args))
+        
+    with open(SimulationParams.fixed_perception_sensor_locations_json_filepath, 'r') as json_file:
+        sensor_locations = json.load(json_file)
+
+    map_name = world.get_map().name
+    
+    for config_entry in sensor_locations:
+        if config_entry["town"] == map_name:
+            for coordinate in config_entry["cordinates"]:
+                fixed.append(FixedPerception(SimulationParams.fixed_perception_sensor_json_filepath, None, world, args, coordinate) )
 
     # Spawn npc actors
     w_all_actors, w_all_id = spawnWalkers(
         client, world, blueprintsWalkers, SimulationParams.num_of_walkers)
+    # w_all_actors = []
+    # w_all_id = []
     v_all_actors, v_all_id = spawnVehicles(
         client, world, vehicles_spawn_points, blueprintsVehicles, SimulationParams.num_of_vehicles)
     world.tick()
@@ -92,39 +145,45 @@ def main():
     print("Starting simulation...")
 
     k = 0
+    run_intersection = False
+
     try:
         with CarlaSyncMode(world, []) as sync_mode:
             while True:
                 frame_id = sync_mode.tick(timeout=5.0)
                 if (k < SimulationParams.ignore_first_n_ticks):
                     k = k + 1
+                    print(k)
                     continue
+
                 for i in range(len(egos)):
                     data = egos[i].getSensorData(frame_id)
 
                     output_folder = os.path.join(
                         SimulationParams.data_output_subfolder, "ego" + str(i))
 
-                    # save_sensors.saveAllSensors(output_folder, data, egos[i].sensor_types)
+                    print("- ego - vehcile -")
+
                     save_sensors.saveAllSensors(
-                        output_folder, data, egos[i].sensor_names)
+                        output_folder, data, egos[i].sensor_names, world)
 
                     control = egos[i].ego.get_control()
                     angle = control.steer
                     save_sensors.saveSteeringAngle(angle, output_folder)
 
-                    # TODO: move output data to desired folder. Is this really necessary?
-                    # if (frame_id > 1000):
-                    #     destination_folder = None
-                    #     if len(sys.argv[1:]) == 1:
-                    #         assert path.exists(str(sys.argv[1:][0])), "Path does not exist"
-                    #         destination_folder = sys.argv[1:][0]
-                    #
-                    #     # move generated data to other folder
-                    #     if (destination_folder is not None):
-                    #         shutil.move(SimulationParams.data_output_subfolder, destination_folder)
-                    #     return
+                print("- fixed - perception -")
 
+                for i in range(len(fixed)):
+
+                    data = fixed[i].getSensorData(frame_id)
+                    output_folder = os.path.join(
+                        SimulationParams.data_output_subfolder, "fixed-" + str(i+1))
+                    try:
+                        save_sensors.saveAllSensors(
+                            output_folder, data, fixed[i].sensor_names, world)
+                    except Exception as error:
+                        print("An exception occurred in fixed - perception saving:", error)
+                        traceback.print_exc()
                 print("new frame!")
     finally:
         # stop pedestrians (list is [controller, actor, controller, actor ...])
