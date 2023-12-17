@@ -468,16 +468,12 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
                     min_x, min_y, xdiff, ydiff = bounding_box
                     isDvs = is_dvs_event_inside_bbox(dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
                     center = get_bounding_box_center(bounding_box)
-                    transform = None
-                    if ego_vehicle is not None:
-                        transform = ego_vehicle.get_transform()
-                    else:
-                        transform = output.transform
+                    transform = output.transform
                     image, datapoint, camera_bbox = create_kitti_datapoint(vehicle, sensor, calibration, img, deptharray, transform, bbox)
                     center_x, center_y = center
                     if datapoint is not None:
                         kitti3dbb.append(datapoint)
-                        rgbbb.append( (vehicle.id, vehicle.attributes.get('base_type'), ( min_x, min_y, min_x + xdiff, min_y + ydiff )) )
+                        rgbbb.append( (vehicle.id, vehicle.attributes.get('base_type'), ( min_x, min_y, xdiff, ydiff )) )
                         # cv2.line(img, points[0], points[1], (0, 0, 255), 1)
                         # cv2.line(img, points[0], points[1], (0, 0, 255), 1)
                         # cv2.line(img, points[1], points[2], (0, 0, 255), 1)
@@ -502,11 +498,7 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
                 bounding_box = get_2d_bounding_box(np.array(points, dtype=np.int32))
                 center = get_bounding_box_center(bounding_box)
                 min_x, min_y, xdiff, ydiff = bounding_box
-                transform = None
-                if ego_vehicle is not None:
-                    transform = ego_vehicle.get_transform()
-                else:
-                    transform = output.transform
+                transform = output.transform
                 image, datapoint, camera_bbox = create_kitti_datapoint(vehicle, sensor, calibration, img, deptharray, transform, bbox)
                 isDvs = is_dvs_event_inside_bbox(dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
                 center_x, center_y = center
@@ -544,7 +536,6 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
 
         save_pascal_voc_format(dvsbb, os.path.join(
         filepath, f'dvs-{output.frame}.xml'), f'dvs-{output.frame}.png', output.width, output.height)
-
         save_coco_format(dvsbb, os.path.join(
         filepath, f'dvs-{output.frame}.json'), output.frame, f'dvs-{output.frame}.png', output.width, output.height)
 

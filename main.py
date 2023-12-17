@@ -5,6 +5,7 @@ import glob
 import shutil
 import os
 import concurrent.futures
+from datetime import datetime
 
 try:
     sys.path.append(glob.glob('./carla-*%d.%d-%s.egg' % (
@@ -94,15 +95,8 @@ def main():
 
     blueprint_library = world.get_blueprint_library()
 
-    for name, value in weather_presets:
-        if name == args.weather:
-            SimulationParams.weather = value
-            break
-
     # Setup
     setupWorld(world)
-    if SimulationParams.weather is not None:
-        setupWorldWeather(world, SimulationParams.weather)
     setupTrafficManager(client)
 
     # Get all required blueprints
@@ -121,15 +115,12 @@ def main():
         sensor_locations = json.load(json_file)
 
     map_name = world.get_map().name
-    
+    SimulationParams.town_map = map_name.split("/")[-1]
     for config_entry in sensor_locations:
         if config_entry["town"] == map_name:
             for coordinate in config_entry["cordinates"]:
                 fixed.append(FixedPerception(SimulationParams.fixed_perception_sensor_json_filepath, None, world, args, coordinate) )
 
-    # Spawn npc actors
-    # w_all_actors = []
-    # w_all_id = []
     w_all_actors, w_all_id = spawnWalkers(
         client, world, blueprintsWalkers, SimulationParams.num_of_walkers)
     
@@ -143,16 +134,10 @@ def main():
         client, world, vehicles_spawn_points, blueprintsVehicles, SimulationParams.num_of_vehicles)
     world.tick()
 
-    spectator = world.get_spectator()
-    if (SimulationParams.number_of_ego_vehicles > 0):
-        transform = egos[0].ego.get_transform()
-        spectator.set_transform(carla.Transform(
-            transform.location + carla.Location(z=100), carla.Rotation(pitch=-90)))
-
+    
     print("Starting simulation...")
 
     def process_egos(i, frame_id):
-        print(f"Process {i} @ {frame_id}")
         data = egos[i].getSensorData(frame_id)
         output_folder = os.path.join(
             SimulationParams.data_output_subfolder, "ego" + str(i))
@@ -167,7 +152,6 @@ def main():
             traceback.print_exc()
 
     def process_fixed(i, frame_id):
-        print(f"Process {i} @ {frame_id}")
         data = fixed[i].getSensorData(frame_id)
         output_folder = os.path.join(
             SimulationParams.data_output_subfolder, "fixed-" + str(i+1))
@@ -194,21 +178,46 @@ def main():
         )
         return weather
     
-    start_weather = carla.WeatherParameters.CloudyNoon
-    end_weather = carla.WeatherParameters.CloudyNight
-    world.set_weather(start_weather)
+    start_weather = "carla.WeatherParameters.ClearNoon"
+    end_weather = "carla.WeatherParameters.ClearNoon"
     duration = 9000
+    metadata = {
+        "start_weather": start_weather,
+        "end_weather": end_weather,
+        "duration": duration,
+        "map_name": map_name,
+        "num_of_walkers": SimulationParams.num_of_walkers,
+        "num_of_vehicles": SimulationParams.num_of_vehicles,
+        "delta_seconds": SimulationParams.delta_seconds,
+        "egos": len(egos),
+        "fixed-views": len(fixed)
+    }
+
+    for name, value in weather_presets:
+        if name == start_weather:
+            start_weather = value
+            break
+    
+    for name, value in weather_presets:
+        if name == end_weather:
+            end_weather = value
+            break
+
+    world.set_weather(start_weather)
+    
     step = 0
     k = 0
-    run_intersection = False
-
+    
+    json_string = json.dumps(metadata, indent=4)
+    file_path = f'./out/metadata-{datetime.now().strftime("%Y%m%d%H%M%S")}.json'
+    with open(file_path, "w") as file:
+        file.write(json_string)
     try:
         with CarlaSyncMode(world, []) as sync_mode:
             while True:
                 frame_id = sync_mode.tick(timeout=5.0)
                 if (k < SimulationParams.ignore_first_n_ticks):
                     k = k + 1
-                    print(k)
                     continue
                 
                 if step > duration:
@@ -216,12 +225,9 @@ def main():
 
                 step = step + 1
 
-                print("*****EGO VEHICLE*****")
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     futures = [executor.submit(process_egos, i, frame_id ) for i in range(len(egos))]
                     concurrent.futures.wait(futures)
-
-                print("*****FIXED PERCEPTION*****")
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     futures = [executor.submit(process_fixed, i, frame_id ) for i in range(len(fixed))]
@@ -229,9 +235,9 @@ def main():
                 
                 if step > duration:
                     break
-                progress = step / duration
-                current_weather = interpolate_weather(start_weather, end_weather, progress)
-                world.set_weather(current_weather)
+                # progress = step / duration
+                # current_weather = interpolate_weather(start_weather, end_weather, progress)
+                # world.set_weather(current_weather)
                 print("new frame!")
     finally:
         # stop pedestrians (list is [controller, actor, controller, actor ...])
