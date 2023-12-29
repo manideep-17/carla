@@ -515,41 +515,43 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
                         dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
                     center = get_bounding_box_center(bounding_box)
                     transform = output.transform
-                    image, datapoint, camera_bbox = create_kitti_datapoint(
-                        vehicle, sensor, calibration, img, deptharray, transform, bbox)
+                    # image, datapoint, camera_bbox = create_kitti_datapoint(
+                    #     vehicle, sensor, calibration, img, deptharray, transform, bbox)
                     center_x, center_y = center
-                    if datapoint is not None:
-                        kitti3dbb.append(datapoint)
+                    if True:
+                        # kitti3dbb.append(datapoint)
                         rgbbb.append((vehicle.id, vehicle.attributes.get(
                             'base_type'), (min_x, min_y, xdiff, ydiff)))
                         if isDvs == True:
-                            kitti3dbbDVS.append(datapoint)
+                            # kitti3dbbDVS.append(datapoint)
                             dvsbb.append((vehicle.id, vehicle.attributes.get(
                                 'base_type'), (min_x, min_y, xdiff, ydiff)))
 
         for vehicle in world.get_actors().filter("*pedestrian*"):
-            bounding_boxes = ClientSideBoundingBoxes.get_bounding_boxes(
-                [vehicle], sensor, output.height, output.width, output.fov)
-            for bbox in bounding_boxes:
-                points = [(int(bbox[i, 0]), int(bbox[i, 1])) for i in range(8)]
-                bounding_box = get_2d_bounding_box(
-                    np.array(points, dtype=np.int32))
-                center = get_bounding_box_center(bounding_box)
-                min_x, min_y, xdiff, ydiff = bounding_box
-                transform = output.transform
-                image, datapoint, camera_bbox = create_kitti_datapoint(
-                    vehicle, sensor, calibration, img, deptharray, transform, bbox)
-                isDvs = is_dvs_event_inside_bbox(
-                    dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
-                center_x, center_y = center
-                if datapoint is not None:
-                    kitti3dbb.append(datapoint)
-                    rgbbb.append((vehicle.id, 'pedestrian',
-                                 (min_x, min_y, xdiff, ydiff)))
-                    if isDvs == True:
-                        kitti3dbbDVS.append(datapoint)
-                        dvsbb.append((vehicle.id, 'pedestrian',
-                                     (min_x, min_y, xdiff, ydiff)))
+            if vehicle.id in hit_actors:
+                bounding_boxes = ClientSideBoundingBoxes.get_bounding_boxes(
+                    [vehicle], sensor, output.height, output.width, output.fov)
+                for bbox in bounding_boxes:
+                    points = [(int(bbox[i, 0]), int(bbox[i, 1]))
+                              for i in range(8)]
+                    bounding_box = get_2d_bounding_box(
+                        np.array(points, dtype=np.int32))
+                    center = get_bounding_box_center(bounding_box)
+                    min_x, min_y, xdiff, ydiff = bounding_box
+                    transform = output.transform
+                    # image, datapoint, camera_bbox = create_kitti_datapoint(
+                    #     vehicle, sensor, calibration, img, deptharray, transform, bbox)
+                    isDvs = is_dvs_event_inside_bbox(
+                        dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
+                    center_x, center_y = center
+                    if True:
+                        # kitti3dbb.append(datapoint)
+                        rgbbb.append((vehicle.id, 'pedestrian',
+                                      (min_x, min_y, xdiff, ydiff)))
+                        if isDvs == True:
+                            # kitti3dbbDVS.append(datapoint)
+                            dvsbb.append((vehicle.id, 'pedestrian',
+                                          (min_x, min_y, xdiff, ydiff)))
 
         output_file = os.path.join(
             filepath, f'{output.frame}.png')
