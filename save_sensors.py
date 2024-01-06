@@ -414,6 +414,7 @@ def save_coco_format(bounding_boxes, file_path, id, image_filename, image_w, ima
         "van": 3,
         "pedestrian": 4,
         "motorcycle": 5,
+        "bicycle": 6,
     }
 
     coco_data = {
@@ -432,7 +433,8 @@ def save_coco_format(bounding_boxes, file_path, id, image_filename, image_w, ima
             {"id": 2, "name": "truck", "supercategory": "vehicle"},
             {"id": 3, "name": "van", "supercategory": "vehicle"},
             {"id": 4, "name": "pedestrian", "supercategory": "human"},
-            {"id": 5, "name": "motorcycle", "supercategory": "vehicle"}
+            {"id": 5, "name": "motorcycle", "supercategory": "vehicle"},
+            {"id": 6, "name": "bicycle", "supercategory": "vehicle"}
         ]
     }
     for obj_id, class_name, bbox in bounding_boxes:

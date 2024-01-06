@@ -19,13 +19,14 @@ def spawnVehicles(client, world, spawn_points, blueprintsVehicles, number):
         'vehicle.mercedes.coupe': 8,
         'vehicle.tesla.model3': 6,
         'vehicle.audi.a2': 5,
-        'vehicle.jeep.wrangler_rubicon': 7,
+        'vehicle.jeep.wrangler_rubicon': 6,
         'vehicle.tesla.cybertruck': 3,
-        'vehicle.ford.mustang': 7,
+        'vehicle.ford.mustang': 5,
         'vehicle.toyota.prius': 8,
         'vehicle.kawasaki.ninja': 12,
         'vehicle.vespa.zx125': 12,
         'vehicle.harley-davidson.low_rider': 12,
+        'vehicle.bh.crossbike': 3
     }
 
     batch = []
