@@ -633,7 +633,7 @@ def optical_camera_callback(image, filepath):
     cv2.imwrite(filename, array)
 
 
-def get_intrinsic_matrix(self, height, width, fov):
+def get_intrinsic_matrix(height, width, fov):
 
     width = int(width)
     height = int(height)
