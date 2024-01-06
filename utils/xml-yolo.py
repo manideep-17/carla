@@ -2,6 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import shutil
 
+
 def convert_voc_to_yolo(xml_path, names_dict):
     tree = ET.parse(xml_path)
     root = tree.getroot()
@@ -47,32 +48,31 @@ def convert_folder(input_folder, output_folder, names_dict):
                     txt_file.write(line + '\n')
 
 
-
 if __name__ == '__main__':
     input_folders = [
-     '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-1/images/rgb_camera',
-    '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-2/images/rgb_camera',
-    '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-3/images/rgb_camera',
-    '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-4/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-1/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-2/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-3/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-4/images/rgb_camera',
 
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-5/images/rgb_camera',
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-6/images/rgb_camera',
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-7/images/rgb_camera',
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-8/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-5/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-6/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-7/images/rgb_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-8/images/rgb_camera',
 
-     '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-1/images/dvs_camera',
-    '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-2/images/dvs_camera',
-    '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-3/images/dvs_camera',
-    '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-4/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-1/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-2/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-3/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town-10-ClearNight-21-12-23/fixed-4/images/dvs_camera',
 
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-5/images/dvs_camera',
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-6/images/dvs_camera',
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-7/images/dvs_camera',
-    '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-8/images/dvs_camera',
-]
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-5/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-6/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-7/images/dvs_camera',
+        '/home/arpit/manideep/carla/out/Town03-SoftRainSunset-23-12-23-f5-8/fixed-8/images/dvs_camera',
+    ]
 
     names_dict = {'car': 0, 'truck': 1, 'van': 2,
-                  'pedestrian': 3, 'motorcycle': 4}
+                  'pedestrian': 3, 'motorcycle': 4, 'bicycle': 5}
 
     for input_folder in input_folders:
         output_folder = input_folder.replace("images", "labels")
@@ -81,10 +81,9 @@ if __name__ == '__main__':
         xml_folder = input_folder.replace("images", "annotations")
         print(xml_folder)
         os.makedirs(xml_folder, exist_ok=True)
-        xml_files = [f for f in os.listdir(input_folder) if not f.endswith('.png')]
+        xml_files = [f for f in os.listdir(
+            input_folder) if not f.endswith('.png')]
         for xml_file in xml_files:
             xml_path = os.path.join(input_folder, xml_file)
             shutil.move(xml_path, os.path.join(xml_folder, xml_file))
         print("Done moved annotations @ ", input_folder)
-
-

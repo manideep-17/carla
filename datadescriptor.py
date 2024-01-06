@@ -77,7 +77,7 @@ from math import pi
 #         self.dimensions = "{} {} {}".format(2*height, 2*width, 2*length)
 
 #     def set_3d_object_location(self, obj_location):
-#         """ TODO: Change this to 
+#         """ TODO: Change this to
 #             Converts the 3D object location from CARLA coordinates and saves them as KITTI coordinates in the object
 #             In Unreal, the coordinate system of the engine is defined as, which is the same as the lidar points
 #             z
@@ -85,7 +85,7 @@ from math import pi
 #             |  /
 #             | /
 #             |/____> y
-#             This is a left-handed coordinate system, with x being forward, y to the right and z up 
+#             This is a left-handed coordinate system, with x being forward, y to the right and z up
 #             See also https://github.com/carla-simulator/carla/issues/498
 #             However, the camera coordinate system for KITTI is defined as
 #                 ▲ z
@@ -96,7 +96,7 @@ from math import pi
 #             |
 #             |
 #             ▼
-#             y 
+#             y
 #             This is a right-handed coordinate system with z being forward, x to the right and y down
 #             Therefore, we have to make the following changes from Carla to Kitti
 #             Carla: X   Y   Z
@@ -124,7 +124,7 @@ from math import pi
 #             bbox_format = " ".join([str(x) for x in self.bbox])
 
 #         return "{} {} {} {} {} {} {} {}".format(self.type, self.truncated, self.occluded, self.alpha, bbox_format, self.dimensions, self.location, self.rotation_y)
-    
+
 """
 #Values    Name      Description
 ----------------------------------------------------------------------------
@@ -146,9 +146,6 @@ from math import pi
                      detection, needed for p/r curves, higher is better.
 """
 
-from typing import List
-from math import pi
-
 
 class KittiDescriptor:
     # This class is responsible for storing a single datapoint for the kitti 3d object detection task
@@ -164,7 +161,7 @@ class KittiDescriptor:
         self.extent = extent
         self._valid_classes = ['car', 'van', 'truck',
                                'pedestrian',
-                               'misc', 'motorcycle']
+                               'misc', 'motorcycle', 'bicycle']
         self.object_id = 0
 
     def set_type(self, obj_type: str):
@@ -236,7 +233,8 @@ class KittiDescriptor:
         """
         # Object location is four values (x, y, z, w). We only care about three of them (xyz)
         x, y, z = obj_location[0], obj_location[1], obj_location[2]
-        assert None not in [self.extent, self.type], "Extent and type must be set before location!"
+        assert None not in [
+            self.extent, self.type], "Extent and type must be set before location!"
         # Both car and pedestrian's midpoint/location are in the middle of the agent.
         # we need to subtract the bbox extent in the height direction when adding location of agent.
         z -= self.extent[0]
