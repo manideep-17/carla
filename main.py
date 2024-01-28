@@ -197,8 +197,8 @@ def main():
         )
         return weather
 
-    start_weather = "carla.WeatherParameters.ClearNoon"
-    end_weather = "carla.WeatherParameters.ClearNoon"
+    start_weather = "ClearNoon"
+    end_weather = "ClearNoon"
     duration = 9000
     metadata = {
         "start_weather": start_weather,
