@@ -245,7 +245,7 @@ def main():
     json_string = json.dumps(metadata, indent=4)
     file_path = f'./out/metadata-{datetime.now().strftime("%Y%m%d%H%M%S")}.json'
     client.start_recorder(
-        f'/home/apg/manideep/carla/out/recording{datetime.now().strftime("%Y%m%d%H%M%S")}.log', True)
+        f'./out/recording{datetime.now().strftime("%Y%m%d%H%M%S")}.log', True)
     with open(file_path, "w") as file:
         file.write(json_string)
     try:
