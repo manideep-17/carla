@@ -264,12 +264,9 @@ def saveAllSensors(out_root_folder, sensor_datas, sensor_types, world):
             try:
                 rgb_camera[sensor_name] = (
                     sensor_data[i], os.path.join(out_root_folder, sensor_name))
-                ray_cast_sensor = sensor_name.replace(
-                    "rgb_camera", "ray_cast_semantic")
                 dvs = sensor_name.replace("rgb", "dvs")
                 depth = sensor_name.replace("rgb", "depth")
-                saveRgbImage(sensor_data, os.path.join(out_root_folder, sensor_name), world, sensor, vehicle,
-                             ray_cast[ray_cast_sensor], ray_cast[f"{ray_cast_sensor}-2"], dvs_camera[dvs], depth_camera[depth])
+                saveRgbImage(sensor_data, os.path.join(out_root_folder, sensor_name), world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
             except Exception as error:
                 print("An exception occurred in rgb_camera sensor find:", error)
                 traceback.print_exc()
@@ -457,11 +454,13 @@ def save_kitti_3d_format(annotations, filepath):
             file.write(str(element) + "\n")
 
 
-def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection, raycast_detection2, dvs, depth):
+def saveRgbImage(output, filepath, world, sensor, ego_vehicle, dvs, depth):
     try:
         dvs_events = np.frombuffer(dvs.raw_data, dtype=np.dtype([
             ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)
         ]))
+        output_file_path = os.path.join(filepath, f'dvs-{output.frame}-xytp.npz')
+        np.savez_compressed(output_file_path, dvs_events=dvs_events)
         dvs_events2 = np.frombuffer(dvs.raw_data, dtype=np.dtype([
             ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
         dvs_img = np.zeros((dvs.height, dvs.width, 3), dtype=np.uint8)
@@ -476,15 +475,6 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
         normalized_depth = np.dot(array, [65536.0, 256.0, 1.0])
         normalized_depth /= 16777215.0
         deptharray = normalized_depth * 1000
-
-        hit_actors = set()
-        for detection in raycast_detection:
-            if detection.object_idx is not 0:
-                hit_actors.add(detection.object_idx)
-
-        for detection in raycast_detection2:
-            if detection.object_idx is not 0:
-                hit_actors.add(detection.object_idx)
 
         img = np.frombuffer(output.raw_data, dtype=np.uint8).reshape(
             (output.height, output.width, 4))
@@ -504,29 +494,26 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
         kitti3dbbDVS = []
 
         for vehicle in world.get_actors().filter("*vehicle*"):
-            if vehicle.id in hit_actors:
-                bounding_boxes = ClientSideBoundingBoxes.get_bounding_boxes(
+            bounding_boxes = ClientSideBoundingBoxes.get_bounding_boxes(
                     [vehicle], sensor, output.height, output.width, output.fov)
-                for bbox in bounding_boxes:
-                    points = [(int(bbox[i, 0]), int(bbox[i, 1]))
+            for bbox in bounding_boxes:
+                points = [(int(bbox[i, 0]), int(bbox[i, 1]))
                               for i in range(8)]
-                    bounding_box = get_2d_bounding_box(
+                bounding_box = get_2d_bounding_box(
                         np.array(points, dtype=np.int32))
-                    min_x, min_y, xdiff, ydiff = bounding_box
-                    isDvs = is_dvs_event_inside_bbox(
+                min_x, min_y, xdiff, ydiff = bounding_box
+                isDvs = is_dvs_event_inside_bbox(
                         dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
-                    center = get_bounding_box_center(bounding_box)
-                    transform = output.transform
-                    image, datapoint, camera_bbox = create_kitti_datapoint(
+                transform = output.transform
+                image, datapoint, camera_bbox = create_kitti_datapoint(
                         vehicle, sensor, calibration, img, deptharray, transform, bbox)
-                    center_x, center_y = center
-                    if datapoint is not None:
-                        kitti3dbb.append(datapoint)
-                        rgbbb.append((vehicle.id, vehicle.attributes.get(
+                if datapoint is not None:
+                    kitti3dbb.append(datapoint)
+                    rgbbb.append((vehicle.id, vehicle.attributes.get(
                             'base_type'), (min_x, min_y, xdiff, ydiff)))
-                        if isDvs == True:
-                            kitti3dbbDVS.append(datapoint)
-                            dvsbb.append((vehicle.id, vehicle.attributes.get(
+                    if isDvs == True:
+                        kitti3dbbDVS.append(datapoint)
+                        dvsbb.append((vehicle.id, vehicle.attributes.get(
                                 'base_type'), (min_x, min_y, xdiff, ydiff)))
 
         for vehicle in world.get_actors().filter("*pedestrian*"):
@@ -536,14 +523,12 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, raycast_detection
                 points = [(int(bbox[i, 0]), int(bbox[i, 1])) for i in range(8)]
                 bounding_box = get_2d_bounding_box(
                     np.array(points, dtype=np.int32))
-                center = get_bounding_box_center(bounding_box)
                 min_x, min_y, xdiff, ydiff = bounding_box
                 transform = output.transform
                 image, datapoint, camera_bbox = create_kitti_datapoint(
                     vehicle, sensor, calibration, img, deptharray, transform, bbox)
                 isDvs = is_dvs_event_inside_bbox(
                     dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
-                center_x, center_y = center
                 if datapoint is not None:
                     kitti3dbb.append(datapoint)
                     rgbbb.append((vehicle.id, 'pedestrian',

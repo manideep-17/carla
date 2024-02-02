@@ -107,11 +107,21 @@ def main():
     walkers_spawn_points = world.get_random_location_from_navigation()
     lidar_segment_bp = blueprint_library.find('sensor.lidar.ray_cast_semantic')
 
-
+    participant_density = {
+        'bicycle': 0,
+        'truck': 0,
+        'van': 0,
+        'car': 0,
+        'motorcycle': 0,
+        'pedestrian': 0
+    }
 
     w_all_actors, w_all_id = spawnWalkers(
         client, world, blueprintsWalkers, SimulationParams.num_of_walkers)
-
+    for actor in w_all_actors:
+        actor_type = actor.attributes['role_name']
+        if actor_type == "pedestrian":
+            participant_density["pedestrian"] += 1
     world.tick()
 
     egos = []
@@ -133,6 +143,12 @@ def main():
 
     v_all_actors, v_all_id = spawnVehicles(
         client, world, vehicles_spawn_points, blueprintsVehicles, SimulationParams.num_of_vehicles)
+
+    for actor in v_all_actors:
+        actor_type = actor.attributes.get('base_type')
+        
+        if actor_type in participant_density:
+            participant_density[actor_type] += 1
     world.tick()
 
     print("Starting simulation...")
@@ -199,14 +215,13 @@ def main():
 
     start_weather = "ClearNoon"
     end_weather = "ClearNoon"
-    duration = 9000
+    duration = 3000
     metadata = {
         "start_weather": start_weather,
         "end_weather": end_weather,
         "duration": duration,
         "map_name": map_name,
-        "num_of_walkers": SimulationParams.num_of_walkers,
-        "num_of_vehicles": SimulationParams.num_of_vehicles,
+        "participant_density": participant_density,
         "delta_seconds": SimulationParams.delta_seconds,
         "egos": len(egos),
         "fixed-views": len(fixed)
@@ -230,7 +245,7 @@ def main():
     json_string = json.dumps(metadata, indent=4)
     file_path = f'./out/metadata-{datetime.now().strftime("%Y%m%d%H%M%S")}.json'
     client.start_recorder(
-        f'/home/arpit/manideep/carla/out/recording{datetime.now().strftime("%Y%m%d%H%M%S")}.log', True)
+        f'/home/apg/manideep/carla/out/recording{datetime.now().strftime("%Y%m%d%H%M%S")}.log', True)
     with open(file_path, "w") as file:
         file.write(json_string)
     try:
@@ -239,12 +254,13 @@ def main():
                 frame_id = sync_mode.tick(timeout=5.0)
                 if (k < SimulationParams.ignore_first_n_ticks):
                     k = k + 1
+                    print("Ignore Count: ", k)
                     continue
 
                 if step > duration:
                     client.stop_recorder()
                     break
-
+                print("Frame: ", step)
                 step = step + 1
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:

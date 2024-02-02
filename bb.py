@@ -11,7 +11,7 @@ import logging
 OCCLUDED_VERTEX_COLOR = (255, 0, 0)
 VISIBLE_VERTEX_COLOR = (0, 255, 0)
 MIN_VISIBLE_VERTICES_FOR_RENDER = 4
-MIN_BBOX_AREA_IN_PX = 100
+MIN_BBOX_AREA_IN_PX = 0 # Adjust as required.
 
 
 class ClientSideBoundingBoxes(object):
@@ -292,7 +292,7 @@ def create_kitti_datapoint(agent, camera, cam_calibration, image, depth_map, pla
 
         area = calc_bbox2d_area(bbox_2d)
         if area < MIN_BBOX_AREA_IN_PX:
-            logging.info("Filtered out bbox with too low area {}".format(area))
+            print("Filtered out bbox with too low area {}".format(area))
             return image, None, None
 
         occlusion = calculate_occlusion(camera_bbox, agent, depth_map)
