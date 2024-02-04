@@ -8,9 +8,7 @@ def create_video_from_images(image_dir, output_video, frame_width, frame_height,
     image_files = [f for f in os.listdir(image_dir) if f.endswith(('.jpg', '.png')) and re.match(r'^\d', f)]
     if "dvs" in output_video:
         image_files = [f for f in os.listdir(image_dir) if f.endswith(('.jpg', '.png')) and f[0].isalpha()]
-    # image_files.sort()
     image_files = sorted(image_files, key=lambda x: int(x.split('.')[0]))
-    image_files = image_files[10500:]
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use 'mp4v' codec for MP4
     out = cv2.VideoWriter(output_video, fourcc, frame_rate, (frame_width, frame_height))
     for image_file in tqdm(image_files, desc="Processing images", unit="image"):
@@ -22,20 +20,17 @@ def create_video_from_images(image_dir, output_video, frame_width, frame_height,
     print(f"Video '{output_video}' created successfully.")
 
 folders = [
-    '/home/apg/manideep/carla/out/Town10HD_Opt_09_12_2023_15_18_14/fixed-1/rgb_camera',
-    # '/home/apg/manideep/carla/out/Town10HD_Opt_09_12_2023_15_18_14/fixed-2/rgb_camera',
-    # '/home/apg/manideep/carla/out/Town10HD_Opt_09_12_2023_15_18_14/fixed-3/rgb_camera',
-    # '/home/apg/manideep/carla/out/Town10HD_Opt_09_12_2023_15_18_14/fixed-4/rgb_camera',
+    '/home/apg/manideep/carla/out/f-2/fixed-1/rgb_camera',    
 ]
 
 frame_width = 1280
 frame_height = 960
-frame_rate = 30  
+frame_rate = 10  
 
 def process_folder(folder):
     folder_name = folder.split('/')[-1]
     perception = folder.split('/')[-2]
-    output_video = f'/home/apg/manideep/carla/out/{perception}-{folder_name}.mp4'
+    output_video = f'/home/apg/manideep/carla/out/aa-{perception}-{folder_name}.mp4'
     print("Starting with ", perception, folder_name)
     create_video_from_images(folder, output_video, frame_width, frame_height, frame_rate)
 

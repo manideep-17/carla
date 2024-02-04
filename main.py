@@ -153,10 +153,33 @@ def main():
 
     print("Starting simulation...")
 
+    def move_npz_files(source_folders):
+        for source_folder in source_folders:
+            npz_files = glob.glob(os.path.join(source_folder, '*.npz'))
+            destination_folder = os.path.join(source_folder, 'npz')
+            os.makedirs(destination_folder, exist_ok=True)
+            for npz_file in npz_files:
+                shutil.move(npz_file, destination_folder)
+
     def process_egos(i, frame_id):
         data = egos[i].getSensorData(frame_id)
         output_folder = os.path.join(
             SimulationParams.data_output_subfolder, "ego" + str(i))
+        try:
+            if frame_id % 100 == 0:
+                source_folders = [
+                    os.path.join(output_folder, "rgb_camera-back"),                    
+                    os.path.join(output_folder, "rgb_camera-back-left"),
+                    os.path.join(output_folder, "rgb_camera-back-right"),
+                    os.path.join(output_folder, "rgb_camera-front"),
+                    os.path.join(output_folder, "rgb_camera-front-right"),
+                    os.path.join(output_folder, "rgb_camera-front-left"),
+                ]
+                print(source_folders)
+                move_npz_files(source_folders)
+        except Exception as error:
+            print("An exception occurred in egos - npz shifting:", error)
+            traceback.print_exc()
         try:
             save_sensors.saveAllSensors(
                 output_folder, data, egos[i].sensor_names, world)
