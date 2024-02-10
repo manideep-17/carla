@@ -237,7 +237,7 @@ class KittiDescriptor:
             self.extent, self.type], "Extent and type must be set before location!"
         # Both car and pedestrian's midpoint/location are in the middle of the agent.
         # we need to subtract the bbox extent in the height direction when adding location of agent.
-        # z -= self.extent[0]
+        z -= self.extent[0]
         self.location = " ".join(map(str, [y, -z, x]))
 
     def set_rotation_y(self, rotation_y: float):
