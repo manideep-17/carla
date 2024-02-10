@@ -287,6 +287,7 @@ def setupTrafficManager(client):
 def setupWorld(world):
     print("Settting up world...")
     settings = world.get_settings()
+    settings.no_rendering_mode = True
     settings.fixed_delta_seconds = SimulationParams.delta_seconds
     settings.synchronous_mode = True
     world.set_pedestrians_cross_factor(0.0)
