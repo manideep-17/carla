@@ -50,19 +50,19 @@ def convert_folder(input_folder, output_folder, names_dict):
 
 if __name__ == '__main__':
     input_folders = [
-    "/home/apg/manideep/carla/out/1/ego0/rgb_camera-back",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-back-left",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-back-right",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-front",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-front-left",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-front-right",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-back",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-back-left",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-back-right",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-front",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-front-left",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-front-right",
 
-        "/home/apg/manideep/carla/out/1/ego0/dvs_camera-back",
-        "/home/apg/manideep/carla/out/1/ego0/dvs_camera-back-left",
-        "/home/apg/manideep/carla/out/1/ego0/dvs_camera-back-right",
-        "/home/apg/manideep/carla/out/1/ego0/dvs_camera-front",
-        "/home/apg/manideep/carla/out/1/ego0/dvs_camera-front-left",
-        "/home/apg/manideep/carla/out/1/ego0/dvs_camera-front-right",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/dvs/dvs_camera-back",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/dvs/dvs_camera-back-left",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/dvs/dvs_camera-back-right",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/dvs/dvs_camera-front",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/dvs/dvs_camera-front-left",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/dvs/dvs_camera-front-right",
     ]
 
     names_dict = {'car': 0, 'truck': 1, 'van': 2,

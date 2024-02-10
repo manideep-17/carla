@@ -2,12 +2,12 @@ import os
 import shutil
 
 source_folders = [
-    "/home/apg/manideep/carla/out/1/ego0/rgb_camera-back",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-back-left",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-back-right",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-front",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-front-left",
-        "/home/apg/manideep/carla/out/1/ego0/rgb_camera-front-right",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-back",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-back-left",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-back-right",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-front",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-front-left",
+    "/home/apg/manideep/carla/out/ego-d5/ego0/images/rgb/rgb_camera-front-right",
 ]
 
 print("DVS")

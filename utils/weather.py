@@ -14,8 +14,8 @@ def get_foggy(w):
                                       scattering_intensity=w.scattering_intensity,
                                       wetness=w.wetness
                                       )
-    weather.fog_density = 35
-    weather.fog_distance = 17.5
+    weather.fog_density = 36
+    weather.fog_distance = 18
     weather.fog_falloff = 2.0
     return weather
 
