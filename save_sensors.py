@@ -210,14 +210,6 @@ edges = [[0, 1], [1, 3], [3, 2], [2, 0], [0, 4], [4, 5],
 
 
 def saveAllSensors(out_root_folder, sensor_datas, sensor_types, world):
-    try:
-        (sensor_data, sensor, vehicle) = sensor_datas[0]
-    except:
-        (sensor_data, sensor) = sensor_datas[0]
-    # except Exception as error:
-    #             print("An exception occurred in rgb_camera:", error)
-    #             traceback.print_exc()
-    saveSnapshot(out_root_folder, sensor_data)
     sensor_datas.pop(0)
 
     dvs_camera = {}

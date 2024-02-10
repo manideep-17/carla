@@ -236,8 +236,8 @@ def main():
         )
         return weather
 
-    start_weather = "FoggyNoon"
-    end_weather = "FoggyNoon"
+    start_weather = "ClearNoon"
+    end_weather = "ClearNoon"
     duration = 3000
     metadata = {
         "start_weather": start_weather,
