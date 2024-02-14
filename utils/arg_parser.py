@@ -106,6 +106,11 @@ class CommandLineArgsParser:
             type=int,
             help='Ignore first n ticks in simulation (default: 30)')
         self.parser.add_argument(
+            '--duration',
+            default=1500,
+            type=int,
+            help='Duration of simulation (default: 1500)')
+        self.parser.add_argument(
             '--number-of-ego-vehicles',
             default=1,
             type=int,

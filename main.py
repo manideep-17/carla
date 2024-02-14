@@ -67,6 +67,7 @@ def main():
     SimulationParams.debug = args.debug
     SimulationParams.start_weather = args.start_weather
     SimulationParams.end_weather = args.end_weather
+    SimulationParams.duration = args.duration
 
     world = client.get_world()
 
@@ -215,7 +216,7 @@ def main():
 
     start_weather = SimulationParams.start_weather
     end_weather = SimulationParams.end_weather
-    duration = 1800
+    duration = SimulationParams.duration
     metadata = {
         "start_weather": start_weather,
         "end_weather": end_weather,
