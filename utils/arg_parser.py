@@ -116,6 +116,11 @@ class CommandLineArgsParser:
             action='store_true',
             help='Are we manully controlling the ego vehicle using Logitech G29 Racing Wheel? (default: False)')
         self.parser.add_argument(
+            '--fixed-perception',
+            default=False,
+            action='store_true',
+            help='Are we capturing data from fixed perception? (default: False)')
+        self.parser.add_argument(
             '-a', '--autopilot',
             action='store_true',
             help='enable autopilot')
@@ -130,9 +135,13 @@ class CommandLineArgsParser:
             dest='debug',
             help='print debug information')
         self.parser.add_argument(
-            '--weather',
-            default='carla.WeatherParameters.ClearNoon',
-            help='set the weather for carla simulation.')
+            '--start-weather',
+            default='ClearNoon',
+            help='set the start weather for carla simulation.')
+        self.parser.add_argument(
+            '--end-weather',
+            default='ClearNoon',
+            help='set the end weather for carla simulation. Start == End for discrete weather.')
 
     def parse_args(self):
         return self.parser.parse_args()

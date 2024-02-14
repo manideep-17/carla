@@ -11,7 +11,7 @@ import logging
 OCCLUDED_VERTEX_COLOR = (255, 0, 0)
 VISIBLE_VERTEX_COLOR = (0, 255, 0)
 MIN_VISIBLE_VERTICES_FOR_RENDER = 2
-MIN_BBOX_AREA_IN_PX = 100 # Adjust as required.
+MIN_BBOX_AREA_IN_PX = 100  # Adjust as required.
 
 
 class ClientSideBoundingBoxes(object):
@@ -21,36 +21,39 @@ class ClientSideBoundingBoxes(object):
     """
 
     @staticmethod
-    def get_bounding_boxes(vehicles, camera, h,w,fov):
+    def get_bounding_boxes(vehicles, camera, h, w, fov):
         """
         Creates 3D bounding boxes based on carla vehicle list and camera.
         """
-        bounding_boxes = [ClientSideBoundingBoxes.get_bounding_box(vehicle, camera, h,w,fov) for vehicle in vehicles]
+        bounding_boxes = [ClientSideBoundingBoxes.get_bounding_box(
+            vehicle, camera, h, w, fov) for vehicle in vehicles]
         # filter objects behind camera
         bounding_boxes = [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
         return bounding_boxes
 
     @staticmethod
-    def get_bounding_box(vehicle, camera, h,w,fov):
+    def get_bounding_box(vehicle, camera, h, w, fov):
         """
         Returns 3D bounding box for a vehicle based on camera view.
         """
 
         bb_cords = ClientSideBoundingBoxes._create_bb_points(vehicle)
-        cords_x_y_z = ClientSideBoundingBoxes._vehicle_to_sensor(bb_cords, vehicle, camera)[:3, :]
-        
-        cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
-        
+        cords_x_y_z = ClientSideBoundingBoxes._vehicle_to_sensor(
+            bb_cords, vehicle, camera)[:3, :]
+
+        cords_y_minus_z_x = np.concatenate(
+            [cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+
         calibration = np.identity(3)
         calibration[0, 2] = w / 2.0
         calibration[1, 2] = h / 2.0
-        calibration[0, 0] = calibration[1, 1] = w / (2.0 * np.tan(fov * np.pi / 360.0))
+        calibration[0, 0] = calibration[1, 1] = w / \
+            (2.0 * np.tan(fov * np.pi / 360.0))
 
         bbox = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_bbox = np.concatenate([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
+        camera_bbox = np.concatenate(
+            [bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
         return camera_bbox
-    
-
 
     @staticmethod
     def _create_bb_points(vehicle):
@@ -69,7 +72,7 @@ class ClientSideBoundingBoxes(object):
         cords[6, :] = np.array([-extent.x, -extent.y, extent.z, 1])
         cords[7, :] = np.array([extent.x, -extent.y, extent.z, 1])
         return cords
-    
+
     @staticmethod
     def _vehicle_to_sensor(cords, vehicle, sensor):
         """
@@ -77,7 +80,8 @@ class ClientSideBoundingBoxes(object):
         """
 
         world_cord = ClientSideBoundingBoxes._vehicle_to_world(cords, vehicle)
-        sensor_cord = ClientSideBoundingBoxes._world_to_sensor(world_cord, sensor)
+        sensor_cord = ClientSideBoundingBoxes._world_to_sensor(
+            world_cord, sensor)
         return sensor_cord
 
     @staticmethod
@@ -88,7 +92,8 @@ class ClientSideBoundingBoxes(object):
 
         bb_transform = carla.Transform(vehicle.bounding_box.location)
         bb_vehicle_matrix = ClientSideBoundingBoxes.get_matrix(bb_transform)
-        vehicle_world_matrix = ClientSideBoundingBoxes.get_matrix(vehicle.get_transform())
+        vehicle_world_matrix = ClientSideBoundingBoxes.get_matrix(
+            vehicle.get_transform())
         bb_world_matrix = np.dot(vehicle_world_matrix, bb_vehicle_matrix)
         world_cords = np.dot(bb_world_matrix, np.transpose(cords))
         return world_cords
@@ -99,7 +104,8 @@ class ClientSideBoundingBoxes(object):
         Transforms world coordinates to sensor.
         """
 
-        sensor_world_matrix = ClientSideBoundingBoxes.get_matrix(sensor.get_transform())
+        sensor_world_matrix = ClientSideBoundingBoxes.get_matrix(
+            sensor.get_transform())
         world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
         sensor_cords = np.dot(world_sensor_matrix, cords)
         return sensor_cords
@@ -132,33 +138,38 @@ class ClientSideBoundingBoxes(object):
         matrix[2, 1] = -c_p * s_r
         matrix[2, 2] = c_p * c_r
         return matrix
-    
+
     @staticmethod
-    def get_bounding_boxes_parked_vehicles(bboxes, camera, h,w,fov):
+    def get_bounding_boxes_parked_vehicles(bboxes, camera, h, w, fov):
         """
         Creates 3D bounding boxes based on carla vehicle list and camera.
         """
-        bounding_boxes = [ClientSideBoundingBoxes.get_bounding_box_parked_vehicle(vehicle, camera, h,w,fov) for vehicle in bboxes]
+        bounding_boxes = [ClientSideBoundingBoxes.get_bounding_box_parked_vehicle(
+            vehicle, camera, h, w, fov) for vehicle in bboxes]
         # filter objects behind camera
         bounding_boxes = [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
         return bounding_boxes
-    
+
     @staticmethod
-    def get_bounding_box_parked_vehicle(bbox, camera, h,w,fov):
+    def get_bounding_box_parked_vehicle(bbox, camera, h, w, fov):
         """
         Returns 3D bounding box for a vehicle based on camera view.
         """
         bb_cords = ClientSideBoundingBoxes._bounding_box_to_world(bbox)
-        cords_x_y_z = ClientSideBoundingBoxes._world_to_sensor(bb_cords, camera)[:3, :]
-        cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+        cords_x_y_z = ClientSideBoundingBoxes._world_to_sensor(bb_cords, camera)[
+            :3, :]
+        cords_y_minus_z_x = np.concatenate(
+            [cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         calibration = np.identity(3)
         calibration[0, 2] = w / 2.0
         calibration[1, 2] = h / 2.0
-        calibration[0, 0] = calibration[1, 1] = w / (2.0 * np.tan(fov * np.pi / 360.0))
+        calibration[0, 0] = calibration[1, 1] = w / \
+            (2.0 * np.tan(fov * np.pi / 360.0))
         bbox = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_bbox = np.concatenate([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
+        camera_bbox = np.concatenate(
+            [bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
         return camera_bbox
-    
+
     @staticmethod
     def _bounding_box_to_world(bbox):
         extent = bbox.extent
@@ -177,7 +188,7 @@ class ClientSideBoundingBoxes(object):
         world_cords = np.dot(world_matrix, np.transpose(cords))
 
         return world_cords
-    
+
     @staticmethod
     def _create_bb_points_parked(vehicle):
         """
@@ -198,7 +209,6 @@ class ClientSideBoundingBoxes(object):
         cords[6, :] = np.array([-extent.x, -extent.y, extent.z, 1])
         cords[7, :] = np.array([extent.x, -extent.y, extent.z, 1])
         return cords
-
 
 
 # TODO Make computations faster by vectorization
@@ -241,10 +251,14 @@ def get_bounding_box_and_refpoint(agent, camera, camera_calibration):
     bb_cords = ClientSideBoundingBoxes._create_bb_points(agent)
     bb_cords_and_refpoint = np.vstack((bb_cords, bbox_refpoint))
 
-    cords_x_y_z = ClientSideBoundingBoxes._vehicle_to_sensor(bb_cords_and_refpoint, agent, camera)[:3, :]
-    cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
-    bbox_and_refpoint = np.transpose(np.dot(camera_calibration, cords_y_minus_z_x))
-    camera_bbox_refpoint = np.concatenate([bbox_and_refpoint[:, 0] / bbox_and_refpoint[:, 2], bbox_and_refpoint[:, 1] / bbox_and_refpoint[:, 2], bbox_and_refpoint[:, 2]], axis=1)
+    cords_x_y_z = ClientSideBoundingBoxes._vehicle_to_sensor(
+        bb_cords_and_refpoint, agent, camera)[:3, :]
+    cords_y_minus_z_x = np.concatenate(
+        [cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+    bbox_and_refpoint = np.transpose(
+        np.dot(camera_calibration, cords_y_minus_z_x))
+    camera_bbox_refpoint = np.concatenate([bbox_and_refpoint[:, 0] / bbox_and_refpoint[:, 2],
+                                          bbox_and_refpoint[:, 1] / bbox_and_refpoint[:, 2], bbox_and_refpoint[:, 2]], axis=1)
 
     sensor_bbox_refpoint = np.transpose(cords_x_y_z)
 
@@ -262,15 +276,17 @@ def create_kitti_datapoint(agent, camera, cam_calibration, image, depth_map, pla
     returns a KittiDescriptor which describes the object to be labeled
     """
 
-    obj_type, agent_transform, bbox_transform, ext, location = transforms_from_agent(agent)
+    obj_type, agent_transform, bbox_transform, ext, location = transforms_from_agent(
+        agent)
 
     if obj_type is None:
         logging.warning(
             "Could not get bounding box for agent. Object type is None")
         return image, None
 
-    (camera_bbox, camera_refpoint), (sensor_bbox, sensor_refpoint) = get_bounding_box_and_refpoint(agent, camera, cam_calibration)
-    
+    (camera_bbox, camera_refpoint), (sensor_bbox,
+                                     sensor_refpoint) = get_bounding_box_and_refpoint(agent, camera, cam_calibration)
+
     num_visible_vertices, num_vertices_outside_camera = calculate_occlusion_stats(image,
                                                                                   bb,
                                                                                   depth_map,
@@ -284,7 +300,7 @@ def create_kitti_datapoint(agent, camera, cam_calibration, image, depth_map, pla
         # Visualize midpoint for agents
         # draw_rect(image, (camera_refpoint[1], camera_refpoint[0]), 4)
         uncropped_bbox_2d = calc_projected_2d_bbox(camera_bbox)
-        
+
         # Crop vertices outside camera to image edges
         crop_boxes_in_canvas(camera_bbox)
 
@@ -321,11 +337,11 @@ def calculate_occlusion(bbox, agent, depth_map):
     if the 4 surroinding points (pixels) are closer to the camera (by using the help of depth map)
     than the actual distance to the middle of the 3D bounding boxe and some margin (the extent of the object)
     """
-    bbox_3d_mid = np.mean(bbox[:,2])
+    bbox_3d_mid = np.mean(bbox[:, 2])
     min_x, min_y, max_x, max_y = calc_projected_2d_bbox(bbox)
     height, width, length = agent.bounding_box.extent.z, agent.bounding_box.extent.x, agent.bounding_box.extent.y
 
-    #depth_margin should depend on the rotation of the object but this solution works fine
+    # depth_margin should depend on the rotation of the object but this solution works fine
     depth_margin = np.max([2 * width, 2 * length])
     is_occluded = []
 
@@ -334,11 +350,13 @@ def calculate_occlusion(bbox, agent, depth_map):
             is_occluded.append(point_is_occluded(
                 (y, x), bbox_3d_mid - depth_margin, depth_map))
 
-    occlusion = ((float(np.sum(is_occluded))) / ((max_x-min_x) * (max_y-min_y)))
+    occlusion = ((float(np.sum(is_occluded))) /
+                 ((max_x-min_x) * (max_y-min_y)))
 
-    #discretize the 0–1 occlusion value into KITTI’s {0,1,2,3} labels by equally dividing the interval into 4 parts
+    # discretize the 0–1 occlusion value into KITTI’s {0,1,2,3} labels by equally dividing the interval into 4 parts
     occlusion = np.digitize(occlusion, bins=[0.25, 0.50, 0.75])
     return occlusion
+
 
 def calculate_truncation(uncropped_bbox, cropped_bbox):
     "Calculate how much of the object’s 2D uncropped bounding box is outside the image boundary"
@@ -348,13 +366,14 @@ def calculate_truncation(uncropped_bbox, cropped_bbox):
     truncation = 1.0 - float(area_cropped / area_uncropped)
     return truncation
 
+
 def get_relative_rotation_y(agent, player_transform):
     """ Returns the relative rotation of the agent to the camera in yaw
     The relative rotation is the difference between the camera rotation (on car) and the agent rotation"""
 
     rot_agent = agent.get_transform().rotation.yaw
     rot_vehicle = player_transform.rotation.yaw
-    #rotate by -90 to match kitti
+    # rotate by -90 to match kitti
     rel_angle = math.radians(rot_agent - rot_vehicle - 90)
     if rel_angle > math.pi:
         rel_angle = rel_angle - 2 * math.pi
@@ -362,20 +381,23 @@ def get_relative_rotation_y(agent, player_transform):
         rel_angle = rel_angle + 2 * math.pi
     return rel_angle
 
+
 def get_alpha(agent, player_transform):
 
-    #heading direction of the vehicle
+    # heading direction of the vehicle
     forward_vector = player_transform.rotation.get_forward_vector()
-    forward_vector_numpy = np.array([forward_vector.x, forward_vector.y, forward_vector.z])
-    #location of vehicle
+    forward_vector_numpy = np.array(
+        [forward_vector.x, forward_vector.y, forward_vector.z])
+    # location of vehicle
     vehicle_location = player_transform.location
-    #location of agent
+    # location of agent
     agent_location = agent.get_transform().location
-    #vector from vehicle to agent
+    # vector from vehicle to agent
     target_vector = agent_location - vehicle_location
-    target_vector_numpy = np.array([target_vector.x, target_vector.y, target_vector.z])
+    target_vector_numpy = np.array(
+        [target_vector.x, target_vector.y, target_vector.z])
     norm_target = np.linalg.norm(target_vector_numpy)
-    #fix rounding errors of dot product (can only range between -1 and 1 for normalized vectors)
+    # fix rounding errors of dot product (can only range between -1 and 1 for normalized vectors)
     dot_prod = np.dot(forward_vector_numpy, target_vector_numpy) / norm_target
     if dot_prod > 1:
         dot_prod = 1.0
@@ -398,6 +420,7 @@ def get_alpha(agent, player_transform):
         alpha = alpha + 2*math.pi
 
     return alpha
+
 
 def transforms_from_agent(agent):
     """ Returns the KITTI object type and transforms, locations and extension of the given agent """

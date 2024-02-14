@@ -258,7 +258,8 @@ def saveAllSensors(out_root_folder, sensor_datas, sensor_types, world):
                     sensor_data[i], os.path.join(out_root_folder, sensor_name))
                 dvs = sensor_name.replace("rgb", "dvs")
                 depth = sensor_name.replace("rgb", "depth")
-                saveRgbImage(sensor_data, os.path.join(out_root_folder, sensor_name), world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
+                saveRgbImage(sensor_data, os.path.join(out_root_folder, sensor_name),
+                             world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
             except Exception as error:
                 print("An exception occurred in rgb_camera sensor find:", error)
                 traceback.print_exc()
@@ -451,7 +452,8 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, dvs, depth):
         dvs_events = np.frombuffer(dvs.raw_data, dtype=np.dtype([
             ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)
         ]))
-        output_file_path = os.path.join(filepath, f'dvs-{output.frame}-xytp.npz')
+        output_file_path = os.path.join(
+            filepath, f'dvs-{output.frame}-xytp.npz')
         np.savez_compressed(output_file_path, dvs_events=dvs_events)
         dvs_events2 = np.frombuffer(dvs.raw_data, dtype=np.dtype([
             ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
@@ -487,26 +489,26 @@ def saveRgbImage(output, filepath, world, sensor, ego_vehicle, dvs, depth):
 
         for vehicle in world.get_actors().filter("*vehicle*"):
             bounding_boxes = ClientSideBoundingBoxes.get_bounding_boxes(
-                    [vehicle], sensor, output.height, output.width, output.fov)
+                [vehicle], sensor, output.height, output.width, output.fov)
             for bbox in bounding_boxes:
                 points = [(int(bbox[i, 0]), int(bbox[i, 1]))
-                              for i in range(8)]
+                          for i in range(8)]
                 bounding_box = get_2d_bounding_box(
-                        np.array(points, dtype=np.int32))
+                    np.array(points, dtype=np.int32))
                 min_x, min_y, xdiff, ydiff = bounding_box
                 isDvs = is_dvs_event_inside_bbox(
-                        dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
+                    dvs_events, min_x, min_y, min_x + xdiff, min_y + ydiff)
                 transform = output.transform
                 image, datapoint, camera_bbox = create_kitti_datapoint(
-                        vehicle, sensor, calibration, img, deptharray, transform, bbox)
+                    vehicle, sensor, calibration, img, deptharray, transform, bbox)
                 if datapoint is not None:
                     kitti3dbb.append(datapoint)
                     rgbbb.append((vehicle.id, vehicle.attributes.get(
-                            'base_type'), (min_x, min_y, xdiff, ydiff)))
+                        'base_type'), (min_x, min_y, xdiff, ydiff)))
                     if isDvs == True:
                         kitti3dbbDVS.append(datapoint)
                         dvsbb.append((vehicle.id, vehicle.attributes.get(
-                                'base_type'), (min_x, min_y, xdiff, ydiff)))
+                            'base_type'), (min_x, min_y, xdiff, ydiff)))
 
         for vehicle in world.get_actors().filter("*pedestrian*"):
             bounding_boxes = ClientSideBoundingBoxes.get_bounding_boxes(

@@ -14,16 +14,16 @@ def spawnVehicles(client, world, spawn_points, blueprintsVehicles, number):
     print("Spawning vehicles...")
     customBp = {
         'vehicle.bh.crossbike': 8,
-        'vehicle.carlamotors.firetruck': 5,
-        'vehicle.ford.ambulance': 5,
+        'vehicle.carlamotors.firetruck': 3,
+        'vehicle.ford.ambulance': 3,
         'vehicle.dodge.charger_police': 6,
         'vehicle.mercedes.coupe': 7,
-        'vehicle.tesla.model3': 6,
+        'vehicle.tesla.model3': 7,
         'vehicle.audi.a2': 7,
-        'vehicle.jeep.wrangler_rubicon': 6,
+        'vehicle.jeep.wrangler_rubicon': 7,
         'vehicle.tesla.cybertruck': 3,
-        'vehicle.ford.mustang': 7,
-        'vehicle.toyota.prius': 7,
+        'vehicle.ford.mustang': 8,
+        'vehicle.toyota.prius': 8,
         'vehicle.kawasaki.ninja': 11,
         'vehicle.vespa.zx125': 11,
         'vehicle.harley-davidson.low_rider': 11
@@ -51,42 +51,6 @@ def spawnVehicles(client, world, spawn_points, blueprintsVehicles, number):
     all_id = [results[i].actor_id for i in range(len(results))]
     all_actors = world.get_actors(all_id)
     return all_actors, all_id
-
-    # batch = []
-    # vehicles_list = []
-    # for n, transform in enumerate(spawn_points):
-    #     if n >= number:
-    #         break
-    #     blueprint = random.choice(blueprintsVehicles)
-    #     if blueprint.has_attribute('color'):
-    #         color = random.choice(
-    #             blueprint.get_attribute('color').recommended_values)
-    #         blueprint.set_attribute('color', color)
-    #     if blueprint.has_attribute('driver_id'):
-    #         driver_id = random.choice(
-    #             blueprint.get_attribute('driver_id').recommended_values)
-    #         blueprint.set_attribute('driver_id', driver_id)
-    #     blueprint.set_attribute('role_name', 'autopilot')
-
-    #     # prepare the light state of the cars to spawn
-    #     # light_state = vls.NONE
-    #     # if args.car_lights_on:
-    #     #     light_state = vls.Position | vls.LowBeam | vls.LowBeam
-
-    #     # spawn the cars and set their autopilot and light state all together
-    #     batch.append(SpawnActor(blueprint, transform)
-    #                  .then(SetAutopilot(FutureActor, True, 8000)))
-    #     #  .then(SetVehicleLightState(FutureActor, light_state)))
-
-    # for response in client.apply_batch_sync(batch, True):
-    #     if response.error:
-    #         print(response)
-    #         logging.error(response.error)
-    #     else:
-    #         vehicles_list.append(response.actor_id)
-    # print("spawned %d vehicles.", len(vehicles_list))
-    # all_actors = world.get_actors(vehicles_list)
-    # return all_actors, vehicles_list
 
 
 def spawnWalkers(client, world, blueprintsWalkers, number):

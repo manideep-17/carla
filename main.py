@@ -61,14 +61,14 @@ def main():
     SimulationParams.data_output_subfolder = os.path.join(
         "out/", SimulationParams.PHASE)
     SimulationParams.manual_control = args.manual_control
+    SimulationParams.fixed_perception = args.fixed_perception
     SimulationParams.res = args.res
     SimulationParams.autopilot = args.autopilot
     SimulationParams.debug = args.debug
+    SimulationParams.start_weather = args.start_weather
+    SimulationParams.end_weather = args.end_weather
 
     world = client.get_world()
-
-    avail_maps = client.get_available_maps()
-    # world = client.load_world(SimulationParams.town_map)
 
     # Remove all parked vehicles etc.
     env_objs = world.get_environment_objects(carla.CityObjectLabel.Car)
@@ -93,13 +93,12 @@ def main():
     for i in range(0, len(env_objs)):
         world.enable_environment_objects({env_objs[i].id}, False)
 
-    blueprint_library = world.get_blueprint_library()
-
     # Setup
     setupWorld(world)
     setupTrafficManager(client)
 
     # Get all required blueprints
+    blueprint_library = world.get_blueprint_library()
     blueprintsVehicles = blueprint_library.filter('vehicle.*')
     vehicles_spawn_points = world.get_map().get_spawn_points()
     blueprintsWalkers = blueprint_library.filter('walker.pedestrian.*')
@@ -128,14 +127,15 @@ def main():
     fixed = []
     map_name = world.get_map().name
 
-    with open(SimulationParams.fixed_perception_sensor_locations_json_filepath, 'r') as json_file:
-        sensor_locations = json.load(json_file)
-    SimulationParams.town_map = map_name.split("/")[-1]
-    for config_entry in sensor_locations:
-        if config_entry["town"] == map_name:
-            for coordinate in config_entry["cordinates"]:
-                fixed.append(FixedPerception(
-                    SimulationParams.fixed_perception_sensor_json_filepath, None, world, args, coordinate))
+    if SimulationParams.fixed_perception == True:
+        with open(SimulationParams.fixed_perception_sensor_locations_json_filepath, 'r') as json_file:
+            sensor_locations = json.load(json_file)
+        SimulationParams.town_map = map_name.split("/")[-1]
+        for config_entry in sensor_locations:
+            if config_entry["town"] == map_name:
+                for coordinate in config_entry["cordinates"]:
+                    fixed.append(FixedPerception(
+                        SimulationParams.fixed_perception_sensor_json_filepath, None, world, args, coordinate))
 
     for i in range(SimulationParams.number_of_ego_vehicles):
         egos.append(EgoVehicle(
@@ -146,20 +146,12 @@ def main():
 
     for actor in v_all_actors:
         actor_type = actor.attributes.get('base_type')
-        
+
         if actor_type in participant_density:
             participant_density[actor_type] += 1
     world.tick()
 
     print("Starting simulation...")
-
-    def move_npz_files(source_folders):
-        for source_folder in source_folders:
-            npz_files = glob.glob(os.path.join(source_folder, '*.npz'))
-            destination_folder = os.path.join(source_folder, 'npz')
-            os.makedirs(destination_folder, exist_ok=True)
-            for npz_file in npz_files:
-                shutil.move(npz_file, destination_folder)
 
     def process_egos(i, frame_id):
         data = egos[i].getSensorData(frame_id)
@@ -221,8 +213,8 @@ def main():
         )
         return weather
 
-    start_weather = "ClearSunset"
-    end_weather = "ClearSunset"
+    start_weather = SimulationParams.start_weather
+    end_weather = SimulationParams.end_weather
     duration = 1800
     metadata = {
         "start_weather": start_weather,
@@ -252,8 +244,6 @@ def main():
 
     json_string = json.dumps(metadata, indent=4)
     file_path = f'./out/metadata-{datetime.now().strftime("%Y%m%d%H%M%S")}.json'
-    # client.start_recorder(
-    #     f'./out/recording{datetime.now().strftime("%Y%m%d%H%M%S")}.log', True)
     with open(file_path, "w") as file:
         file.write(json_string)
     try:
@@ -264,10 +254,10 @@ def main():
                     k = k + 1
                     print("Ignore Count: ", k)
                     continue
-                
+
                 if step > duration:
-                    # client.stop_recorder()
                     break
+
                 print("Frame: ", step)
                 step = step + 1
 
