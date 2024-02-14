@@ -221,14 +221,12 @@ def main():
         )
         return weather
 
-    # start_weather = "ClearSunset"
-    # end_weather = "ClearSunset"
-    i=0
-    weathers = ["ClearSunset", "CloudySunset", "WetSunset", "ClearNight", "CloudyNight", "WetNight"]
+    start_weather = "ClearSunset"
+    end_weather = "ClearSunset"
     duration = 1800
     metadata = {
-        "start_weather": weathers,
-        "end_weather": weathers,
+        "start_weather": start_weather,
+        "end_weather": end_weather,
         "duration": duration,
         "map_name": map_name,
         "participant_density": participant_density,
@@ -236,8 +234,6 @@ def main():
         "egos": len(egos),
         "fixed-views": len(fixed)
     }
-    start_weather = weathers[i]
-    end_weather = weathers[i]
 
     for name, value in weather_presets:
         if name == start_weather:
@@ -264,36 +260,21 @@ def main():
         with CarlaSyncMode(world, []) as sync_mode:
             while True:
                 frame_id = sync_mode.tick(timeout=5.0)
-
-                if step > duration:
-                    # client.stop_recorder()
-                    k=-70
-                    step=-1
-                    i = i+1
-                    if i == len(weathers):
-                        break
-                    print("Weather CHANGE")                    
-                    start_weather = weathers[i]
-                    end_weather = weathers[i]
-                    print(start_weather)
-                    for name, value in weather_presets:
-                        if name == start_weather:
-                            start_weather = value
-                            break
-                    world.set_weather(start_weather)
-
                 if (k < SimulationParams.ignore_first_n_ticks):
                     k = k + 1
                     print("Ignore Count: ", k)
                     continue
-
+                
+                if step > duration:
+                    # client.stop_recorder()
+                    break
                 print("Frame: ", step)
                 step = step + 1
 
-                # with concurrent.futures.ThreadPoolExecutor() as executor:
-                #     futures = [executor.submit(
-                #         process_egos, i, frame_id) for i in range(len(egos))]
-                #     concurrent.futures.wait(futures)
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = [executor.submit(
+                        process_egos, i, frame_id) for i in range(len(egos))]
+                    concurrent.futures.wait(futures)
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     futures = [executor.submit(
