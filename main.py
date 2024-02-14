@@ -239,7 +239,7 @@ def main():
 
     world.set_weather(start_weather)
 
-    step = -1
+    step = 0
     k = 0
 
     json_string = json.dumps(metadata, indent=4)

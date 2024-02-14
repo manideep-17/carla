@@ -308,7 +308,6 @@ def create_kitti_datapoint(agent, camera, cam_calibration, image, depth_map, pla
 
         area = calc_bbox2d_area(bbox_2d)
         if area < MIN_BBOX_AREA_IN_PX:
-            print("Filtered out bbox with too low area {}".format(area))
             return image, None, None
 
         occlusion = calculate_occlusion(camera_bbox, agent, depth_map)
