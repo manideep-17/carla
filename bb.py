@@ -256,7 +256,7 @@ def get_bounding_box_and_refpoint(agent, camera, camera_calibration):
     return (camera_bbox, camera_refpoint), (sensor_bbox, sensor_refpoint)
 
 
-def create_kitti_datapoint(agent, camera, cam_calibration, image, depth_map, player_transform, bb, max_render_depth=1000):
+def create_kitti_datapoint(agent, camera, cam_calibration, image, depth_map, player_transform, bb, max_render_depth=100):
     """
     Calculates the bounding box of the given agent, and
     returns a KittiDescriptor which describes the object to be labeled
