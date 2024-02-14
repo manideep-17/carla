@@ -10,8 +10,8 @@ import logging
 
 OCCLUDED_VERTEX_COLOR = (255, 0, 0)
 VISIBLE_VERTEX_COLOR = (0, 255, 0)
-MIN_VISIBLE_VERTICES_FOR_RENDER = 4
-MIN_BBOX_AREA_IN_PX = 0 # Adjust as required.
+MIN_VISIBLE_VERTICES_FOR_RENDER = 2
+MIN_BBOX_AREA_IN_PX = 100 # Adjust as required.
 
 
 class ClientSideBoundingBoxes(object):
