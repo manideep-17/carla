@@ -1,5 +1,8 @@
 import cv2
 import xml.etree.ElementTree as ET
+import os
+import glob
+import random
 
 
 def draw_bounding_boxes(image_path, xml_path, output_path):
@@ -20,8 +23,15 @@ def draw_bounding_boxes(image_path, xml_path, output_path):
     cv2.imwrite(output_path, image)
 
 
-image_path = '/home/apg/manideep/carla/out/test/976.png'
-xml_path = '/home/apg/manideep/carla/out/test/976.xml'
-output_path = '/home/apg/manideep/carla/out/test/output_image_with_boxes.jpg'
+image_path = '/Users/manideepreddyaliminati/Documents/coding/research/carla/utils'
+output_path = f'./data/'
+png_files = glob.glob(os.path.join(image_path, '*.png'))
+for png_file in png_files:
+    img = os.path.abspath(png_file)
+    annotation = img.replace("images", "annotations").replace("png", "xml")
+    draw_bounding_boxes(image_path, annotation, output_path)
 
-draw_bounding_boxes(image_path, xml_path, output_path)
+# xml_path = '/home/apg/manideep/carla/out/test/976.xml'
+# output_path = '/home/apg/manideep/carla/out/test/output_image_with_boxes.jpg'
+
+# draw_bounding_boxes(image_path, xml_path, output_path)
