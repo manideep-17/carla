@@ -6,6 +6,7 @@ import cv2
 import traceback
 import json
 from bb import create_kitti_datapoint
+import concurrent.futures
 
 
 class ClientSideBoundingBoxes(object):
@@ -215,68 +216,66 @@ def saveAllSensors(out_root_folder, sensor_datas, sensor_types, world):
     dvs_camera = {}
     rgb_camera = {}
     depth_camera = {}
-    sematic_seg_camera = {}
-    ray_cast = {}
-
-    for i in range(len(sensor_datas)):
-        try:
-            (sensor_data, sensor, vehicle) = sensor_datas[i]
-        except:
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for i in range(len(sensor_datas)):
             try:
-                (sensor_data, sensor) = sensor_datas[i]
-                vehicle = None
-            except Exception as error:
-                print("An exception occurred in saveAllSensors:", error)
-                traceback.print_exc()
-        sensor_name = sensor_types[i]
+                (sensor_data, sensor, vehicle) = sensor_datas[i]
+            except:
+                try:
+                    (sensor_data, sensor) = sensor_datas[i]
+                    vehicle = None
+                except Exception as error:
+                    print("An exception occurred in saveAllSensors:", error)
+                    traceback.print_exc()
+            sensor_name = sensor_types[i]
 
-        if (sensor_name.find('dvs') != -1):
-            dvs_camera[sensor_name] = sensor_data
+            if (sensor_name.find('dvs') != -1):
+                dvs_camera[sensor_name] = sensor_data
 
-        if (sensor_name.find('optical_flow') != -1):
-            optical_camera_callback(
-                sensor_data, os.path.join(out_root_folder, sensor_name))
+            if (sensor_name.find('optical_flow') != -1):
+                optical_camera_callback(
+                    sensor_data, os.path.join(out_root_folder, sensor_name))
 
-        if (sensor_name.find('instance_segmentation_camera') != -1):
-            saveISImage(sensor_data, os.path.join(
-                out_root_folder, sensor_name))
-            pass
-
-        if (sensor_name.find('semantic_segmentation_camera') != -1):
-            sematic_seg_camera[sensor_name] = sensor_data
-            saveSegImage(sensor_data, os.path.join(
-                out_root_folder, sensor_name))
-
-        if (sensor_name.find('depth_camera') != -1):
-            depth_camera[sensor_name] = sensor_data
-            saveDepthImage(sensor_data, os.path.join(
-                out_root_folder, sensor_name))
-
-        if (sensor_name.find('rgb_camera') != -1):
-            try:
-                rgb_camera[sensor_name] = (
-                    sensor_data[i], os.path.join(out_root_folder, sensor_name))
-                dvs = sensor_name.replace("rgb", "dvs")
-                depth = sensor_name.replace("rgb", "depth")
-                saveRgbImage(sensor_data, os.path.join(out_root_folder, sensor_name),
-                             world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
-            except Exception as error:
-                print("An exception occurred in rgb_camera sensor find:", error)
-                traceback.print_exc()
-
-        if (sensor_name.find('imu') != -1):
-            saveImu(sensor_data, os.path.join(
-                out_root_folder, sensor_name), sensor_name)
-
-        if (sensor_name.find('gnss') != -1):
-            saveGnss(sensor_data, os.path.join(
-                out_root_folder, sensor_name), sensor_name)
-
-        if (sensor_name == 'sensor.lidar.ray_cast' or sensor_name == 'sensor.lidar.ray_cast_semantic' or sensor_name.find('lidar_64') != -1 or sensor_name.find('ray_cast_semantic') != -1):
-            ray_cast[sensor_name] = sensor_data
-            if (sensor_name == 'lidar_64'):
-                saveLidar(sensor_data, os.path.join(
+            if (sensor_name.find('instance_segmentation_camera') != -1):
+                saveISImage(sensor_data, os.path.join(
                     out_root_folder, sensor_name))
+                pass
+
+            if (sensor_name.find('semantic_segmentation_camera') != -1):
+                saveSegImage(sensor_data, os.path.join(
+                    out_root_folder, sensor_name))
+
+            if (sensor_name.find('depth_camera') != -1):
+                depth_camera[sensor_name] = sensor_data
+                saveDepthImage(sensor_data, os.path.join(
+                    out_root_folder, sensor_name))
+
+            if (sensor_name.find('rgb_camera') != -1):
+                try:
+                    rgb_camera[sensor_name] = (
+                        sensor_data[i], os.path.join(out_root_folder, sensor_name))
+                    dvs = sensor_name.replace("rgb", "dvs")
+                    depth = sensor_name.replace("rgb", "depth")
+                    rgb_file_path = os.path.join(
+                        out_root_folder, sensor_name)
+                    future = executor.submit(saveRgbImage, sensor_data, rgb_file_path,
+                                             world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
+                    futures.append(future)
+                except Exception as error:
+                    print("An exception occurred in rgb_camera sensor find:", error)
+                    traceback.print_exc()
+
+            if (sensor_name.find('imu') != -1):
+                saveImu(sensor_data, os.path.join(
+                    out_root_folder, sensor_name), sensor_name)
+
+            if (sensor_name.find('gnss') != -1):
+                saveGnss(sensor_data, os.path.join(
+                    out_root_folder, sensor_name), sensor_name)
+
+        concurrent.futures.wait(
+            futures, return_when=concurrent.futures.ALL_COMPLETED)
     return
 
 
