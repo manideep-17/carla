@@ -233,23 +233,18 @@ def saveAllSensors(out_root_folder, sensor_datas, sensor_types, world):
             if (sensor_name.find('dvs') != -1):
                 dvs_camera[sensor_name] = sensor_data
 
-            if sensor_name.find('optical_flow') != -1:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(optical_camera_callback, sensor_data, os.path.join(
-                        out_root_folder, sensor_name))
-                    futures.append(future)
+            if (sensor_name.find('optical_flow') != -1):
+                optical_camera_callback(
+                    sensor_data, os.path.join(out_root_folder, sensor_name))
 
-            if sensor_name.find('instance_segmentation_camera') != -1:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(
-                        saveISImage, sensor_data, os.path.join(out_root_folder, sensor_name))
-                    futures.append(future)
+            if (sensor_name.find('instance_segmentation_camera') != -1):
+                saveISImage(sensor_data, os.path.join(
+                    out_root_folder, sensor_name))
+                pass
 
-            if sensor_name.find('semantic_segmentation_camera') != -1:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(
-                        saveSegImage, sensor_data, os.path.join(out_root_folder, sensor_name))
-                    futures.append(future)
+            if (sensor_name.find('semantic_segmentation_camera') != -1):
+                saveSegImage(sensor_data, os.path.join(
+                    out_root_folder, sensor_name))
 
             if (sensor_name.find('depth_camera') != -1):
                 depth_camera[sensor_name] = sensor_data
