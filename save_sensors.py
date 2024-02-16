@@ -257,13 +257,11 @@ def saveAllSensors(out_root_folder, sensor_datas, sensor_types, world):
                         sensor_data[i], os.path.join(out_root_folder, sensor_name))
                     dvs = sensor_name.replace("rgb", "dvs")
                     depth = sensor_name.replace("rgb", "depth")
-
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        rgb_file_path = os.path.join(
-                            out_root_folder, sensor_name)
-                        future = executor.submit(saveRgbImage, sensor_data, rgb_file_path,
-                                                 world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
-                        futures.append(future)
+                    rgb_file_path = os.path.join(
+                        out_root_folder, sensor_name)
+                    future = executor.submit(saveRgbImage, sensor_data, rgb_file_path,
+                                             world, sensor, vehicle, dvs_camera[dvs], depth_camera[depth])
+                    futures.append(future)
                 except Exception as error:
                     print("An exception occurred in rgb_camera sensor find:", error)
                     traceback.print_exc()
